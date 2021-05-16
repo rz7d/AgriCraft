@@ -16,6 +16,9 @@ import com.infinityraider.infinitylib.block.property.InfPropertyConfiguration;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.*;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootContext;
@@ -30,7 +33,10 @@ import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Map;
@@ -57,8 +63,11 @@ public class BlockCropSticks extends BlockCropBase<TileEntityCropSticks> {
             .add(CROSS_CROP)
             .add(PLANT)
             .add(LIGHT)
+            .lavaloggable()
             .waterloggable()
             .build();
+
+    private final boolean lavaloggable;
 
     // TileEntity factory
     private static final BiFunction<BlockState, IBlockReader, TileEntityCropSticks> TILE_FACTORY = (s, w) -> new TileEntityCropSticks();
@@ -106,6 +115,11 @@ public class BlockCropSticks extends BlockCropBase<TileEntityCropSticks> {
                 .setLightLevel(LIGHT::fetch)
         );
         this.variant = variant;
+        if (variant == CropStickVariant.OBSIDIAN || variant == CropStickVariant.IRON) {
+            lavaloggable = true;
+        } else {
+            lavaloggable = false;
+        }
     }
 
     @Override
@@ -164,6 +178,28 @@ public class BlockCropSticks extends BlockCropBase<TileEntityCropSticks> {
     @SuppressWarnings("deprecation")
     public VoxelShape getRayTraceShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
         return this.getShape(state, world, pos, context);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void neighborChanged(BlockState state, World world, BlockPos pos, Block block, BlockPos fromPos, boolean isMoving) {
+        super.neighborChanged(state, world, pos, block, fromPos, isMoving);
+        if (InfProperty.Defaults.lavalogged().fetch(state)) {
+            world.getPendingFluidTicks().scheduleTick(pos, Fluids.LAVA, Fluids.LAVA.getTickRate(world));
+        }
+    }
+
+    @Nullable
+    @Override
+    public BlockState getStateForPlacement(World world, BlockPos pos) {
+        BlockState state = this.getDefaultState();
+        if(state.isValidPosition(world, pos)) {
+            if (this.lavaloggable) {
+                return this.waterAndLavalog(state, world, pos);
+            }
+            return this.waterlog(state, world, pos);
+        }
+        return null;
     }
 
     @Override
@@ -268,4 +304,32 @@ public class BlockCropSticks extends BlockCropBase<TileEntityCropSticks> {
         }
         return drops;
     }
+
+    @Override
+    public boolean canContainFluid(IBlockReader worldIn, BlockPos pos, BlockState state, Fluid fluid) {
+        return super.canContainFluid(worldIn, pos, state, fluid) || (this.lavaloggable && !state.get(InfProperty.Defaults.lavalogged().getProperty()) && fluid == (Fluids.LAVA));
+    }
+
+    @Override
+    public boolean receiveFluid(IWorld world, BlockPos pos, BlockState state, FluidState fluidState) {
+        if (this.lavaloggable && !InfProperty.Defaults.lavalogged().fetch(state) && fluidState.getFluid() == Fluids.LAVA) {
+            if (!world.isRemote()) {
+                world.setBlockState(pos, state.with(InfProperty.Defaults.lavalogged().getProperty(), Boolean.TRUE), 3);
+                world.getPendingFluidTicks().scheduleTick(pos, fluidState.getFluid(), fluidState.getFluid().getTickRate(world));
+            }
+            return true;
+        }
+        return super.receiveFluid(world, pos, state, fluidState);
+    }
+
+    @Override
+    public Fluid pickupFluid(IWorld world, BlockPos pos, BlockState state) {
+        if (state.get(InfProperty.Defaults.lavalogged().getProperty())) {
+            world.setBlockState(pos, state.with(InfProperty.Defaults.lavalogged().getProperty(), Boolean.FALSE), 3);
+            return Fluids.LAVA;
+        } else {
+            return super.pickupFluid(world, pos, state);
+        }
+    }
+
 }
