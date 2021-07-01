@@ -51,6 +51,7 @@ public abstract class Names {
         public static final String SERENE_SEASONS = "sereneseasons";
         public static final String SIMPLY_SEASONS = "simplyseasons";
         public static final String STRAW_GOLEM = "strawgolem";
+        public static final String BAYOU_BLUES = "bayou_blues";
     }
 
     public static final class Nuggets {

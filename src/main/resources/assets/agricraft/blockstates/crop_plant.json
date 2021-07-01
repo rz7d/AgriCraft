@@ -1,6 +1,22 @@
 {
   "forge_marker": 1,
   "variants": {
-    "": [{ "model": "agricraft:block/crop/plant" }]
+    "": [
+      {
+        "model": "agricraft:block/crop/plant"
+      },
+      {
+        "model": "agricraft:block/crop/plant",
+        "y": 90
+      },
+      {
+        "model": "agricraft:block/crop/plant",
+        "y": 180
+      },
+      {
+        "model": "agricraft:block/crop/plant",
+        "y": 270
+      }
+    ]
   }
 }
