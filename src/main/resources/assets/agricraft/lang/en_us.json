@@ -628,6 +628,30 @@
   "agricraft.plant.abundance_sunny_marigold.desc": "Flowered Sun.",
 
   "agricraft.plant.abundance_yellow_african_daisy.seed": "Yellow African Daisy Seeds",
-  "agricraft.plant.abundance_yellow_african_daisy.desc": "Brings a cheerful splash of color."
+  "agricraft.plant.abundance_yellow_african_daisy.desc": "Brings a cheerful splash of color.",
+
+  "agricraft.plant.bayou_blues_blue_lily.seed": "Blue Lily Seeds",
+  "agricraft.plant.bayou_blues_blue_lily.desc": "",
+
+  "agricraft.plant.bayou_blues_cyan_lily.seed": "Cyan Lily Seeds",
+  "agricraft.plant.bayou_blues_cyan_lily.desc": "",
+
+  "agricraft.plant.bayou_blues_light_blue_lily.seed": "Light Blue Lily Seeds",
+  "agricraft.plant.bayou_blues_light_blue_lily.desc": "",
+
+  "agricraft.plant.bayou_blues_light_gray_lily.seed": "Light Gray Lily Seeds",
+  "agricraft.plant.bayou_blues_light_gray_lily.desc": "",
+
+  "agricraft.plant.bayou_blues_magenta_lily.seed": "Magenta Lily Seeds",
+  "agricraft.plant.bayou_blues_magenta_lily.desc": "",
+
+  "agricraft.plant.bayou_blues_pink_lily.seed": "Pink Lily Seeds",
+  "agricraft.plant.bayou_blues_pink_lily.desc": "",
+
+  "agricraft.plant.bayou_blues_purple_lily.seed": "Purple Lily Seeds",
+  "agricraft.plant.bayou_blues_purple_lily.desc": "",
+
+  "agricraft.plant.bayou_blues_white_lily.seed": "White Lily Seeds",
+  "agricraft.plant.bayou_blues_white_lily.desc": ""
 
 }
