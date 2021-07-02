@@ -8,17 +8,15 @@ import com.infinityraider.agricraft.api.v1.content.items.IAgriSeedItem;
 import com.infinityraider.agricraft.api.v1.plugin.AgriPlugin;
 import com.infinityraider.agricraft.api.v1.plugin.IAgriPlugin;
 import com.infinityraider.agricraft.reference.Names;
-import com.infinityraider.agricraft.render.plant.AgriPlantQuadGenerator;
-import com.infinityraider.infinitylib.render.tessellation.ITessellator;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.client.renderer.vertex.VertexFormatElement;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -27,7 +25,7 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 
-import java.util.List;
+import java.util.Arrays;
 
 @AgriPlugin(modId = Names.Mods.BAYOU_BLUES)
 public class BayouBluesPlugin implements IAgriPlugin {
@@ -92,17 +90,29 @@ public class BayouBluesPlugin implements IAgriPlugin {
         ImmutableList<BakedQuad> originalQuads = event.getOriginalQuads();
         event.clearQuads();// we clear the quads as we don't want the originals
 
+        VertexFormat format = DefaultVertexFormats.BLOCK;
+        int size = 1;
+        int colorIndex = -1;
+        //search for the index & size of the color element
+        for (int i = 0; i < format.getElements().size(); i++) {
+            if (format.getElements().get(i).getUsage() == VertexFormatElement.Usage.COLOR) {
+                colorIndex = i;
+                size = format.getElements().get(i).getSize() / 4;
+            }
+        }
+        int offset = format.getOffset(colorIndex);
+        int[] rgba = new int[]{0xFF, 0x00, 0x00, 0xFF};//the order should be r g b a, I hope so
+        System.out.println("offset = " + offset);
+
         System.out.println("looping on quads");
         for (BakedQuad originalQuad : originalQuads) {
             //code adapted from https://forums.minecraftforge.net/topic/66893-112-is-there-a-way-to-color-bakedquads/?do=findComment&comment=321762
 //            if (originalQuad.getTintIndex() >= 0) {
 //                System.out.println("processing tint index " + originalQuad.getTintIndex());
             int[] vertex = originalQuad.getVertexData();
-            VertexFormat format = DefaultVertexFormats.BLOCK;
-            int size = format.getIntegerSize();
-            int color = 0xFF0000FF;//format is ABGR
+            System.out.println(Arrays.toString(vertex));
             for (int i = 0; i < 4; i++) {
-                vertex[format.getOffset(i) / 4 + size * i] = color;//we change the color
+                vertex[offset + size * i] = rgba[i];//we change the color
             }
 
             BakedQuad newQuad = new BakedQuad(vertex,
@@ -110,35 +120,13 @@ public class BayouBluesPlugin implements IAgriPlugin {
                     originalQuad.getFace(),
                     originalQuad.getSprite(),
                     originalQuad.applyDiffuseLighting());
-            event.injectQuads(newQuad);//we add the new quad. Unfortunately, they are invisible
+            event.injectQuads(newQuad);//we add the new quad.
 //            } else {
 //                System.out.println("injecting original");
 //                event.injectQuads(originalQuads);
 //            }
         }
         System.out.println("amount of quads " + event.getOutputQuads().size());
-    }
-
-    public static void onQuadBakedTessellator(PlantQuadBakeEvent event) {
-        AgriPlantQuadGenerator quadGenerator = (AgriPlantQuadGenerator) event.getQuadGenerator();
-        List<BakedQuad> originalQuads = event.getOriginalQuads();
-        event.clearQuads();
-
-        ITessellator tessellator = quadGenerator.getTessellator();
-
-        tessellator.startDrawingQuads();
-        tessellator.setFace((Direction) null);
-        tessellator.pushMatrix();
-
-        tessellator.setColorRGB(1, 0, 0);
-        tessellator.addQuads(originalQuads);
-        //when the quads are added, the color isn't applied to them
-
-        tessellator.popMatrix();
-        List<BakedQuad> quads = tessellator.getQuads();
-        event.injectQuads(quads);
-
-        tessellator.draw();
     }
 
     @Override
@@ -160,7 +148,6 @@ public class BayouBluesPlugin implements IAgriPlugin {
     public void onCommonSetupEvent(FMLCommonSetupEvent event) {
         MinecraftForge.EVENT_BUS.addListener(BayouBluesPlugin::onRightClickBlock);
         MinecraftForge.EVENT_BUS.addListener(BayouBluesPlugin::onQuadBakedVertex);
-//        MinecraftForge.EVENT_BUS.addListener(BayouBluesPlugin::onQuadBakedTessellator);
     }
 
     @Override
