@@ -65,7 +65,7 @@ public class TileEntityIrrigationTank extends TileEntityIrrigationComponent impl
 
     public boolean isMultiBlockOrigin() {
         BlockPos origin = this.getMultiBlockMin();
-        return DEFAULT.equals(origin) || this.getPos().equals(origin);
+        return this.origin == this || DEFAULT.equals(origin) || this.getPos().equals(origin);
     }
 
     @Override
@@ -186,19 +186,16 @@ public class TileEntityIrrigationTank extends TileEntityIrrigationComponent impl
     }
 
     public TileEntityIrrigationTank getMultiBlockOrigin() {
-        if(this.getWorld() == null) {
+        World world = this.getWorld();
+        if(world == null || this.isMultiBlockOrigin()) {
             return this;
         }
-        if(this.isMultiBlockOrigin()) {
-            return this;
+        if(this.origin != null) {
+            return this.origin;
         }
-        if(this.origin == null) {
-            TileEntity tile = this.getWorld().getTileEntity(this.getMultiBlockMin());
-            if (tile instanceof TileEntityIrrigationTank) {
-                this.origin = (TileEntityIrrigationTank) tile;
-                return this.origin;
-            }
-        } else {
+        TileEntity tile = world.getTileEntity(this.getMultiBlockMin());
+        if (tile instanceof TileEntityIrrigationTank) {
+            this.origin = (TileEntityIrrigationTank) tile;
             return this.origin;
         }
         this.unFormMultiBlock();
@@ -248,10 +245,11 @@ public class TileEntityIrrigationTank extends TileEntityIrrigationComponent impl
 
     public void unFormMultiBlock() {
         // Safety check
-        if(this.getWorld() == null) {
+        World world = this.getWorld();
+        if(world == null) {
             return;
         }
-        float level = this.getLevel();
+        float level = super.getLevel();
         BlockPos min = new BlockPos(this.getMultiBlockMin());
         BlockPos max = new BlockPos(this.getMultiBlockMax());
         BlockPos.Mutable pos = new BlockPos.Mutable(0, 0, 0);
@@ -259,10 +257,14 @@ public class TileEntityIrrigationTank extends TileEntityIrrigationComponent impl
             for(int y = min.getY(); y <= max.getY(); y++) {
                 for (int z = min.getZ(); z <= max.getZ(); z++) {
                     pos.setPos(x, y, z);
-                    TileEntity tile = this.getWorld().getTileEntity(pos);
+                    TileEntity tile = world.getTileEntity(pos);
                     if(tile instanceof TileEntityIrrigationTank) {
                         TileEntityIrrigationTank tank = (TileEntityIrrigationTank) tile;
-                        tank.origin = null;
+                        if (world.isRemote()) {
+                            tank.origin = tank;
+                        } else {
+                            tank.origin = null;
+                        }
                         tank.min.set(tank.getPos());
                         tank.max.set(tank.getPos());
                         this.getWorld().setBlockState(tank.getPos(), AgriCraft.instance.getModBlockRegistry().tank.getDefaultState());
