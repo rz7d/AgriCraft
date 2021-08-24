@@ -21,7 +21,7 @@ public class CreateCompat {
     static void injectAgriHarvesterMovementBehaviour() {
         try {
             Class<AllMovementBehaviours> clazz = AllMovementBehaviours.class;
-            Field field = clazz.getDeclaredField("movementBehaviours");
+            Field field = clazz.getDeclaredField("MOVEMENT_BEHAVIOURS");
             field.setAccessible(true);
             HashMap<ResourceLocation, MovementBehaviour> map = (HashMap<ResourceLocation, MovementBehaviour>) field.get(null);
             map.put(AllBlocks.MECHANICAL_HARVESTER.getId(), new AgriHarvesterMovementBehaviour());
